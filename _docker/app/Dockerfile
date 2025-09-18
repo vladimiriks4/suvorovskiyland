@@ -36,6 +36,9 @@ COPY --chown=www:www . /var/www
 # add root to www group
 RUN chmod -R ug+w /var/www/storage
 
+# Меняем пользователя на www
+USER www
+
 # Открываем порт для php-fpm
 EXPOSE 9000
 # Запускаем php-fpm сервер
