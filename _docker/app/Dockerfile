@@ -1,18 +1,19 @@
 FROM php:8.1-fpm
 
-# Set working directory
+# Установить рабочую директорию
 WORKDIR /var/www
 
-# Install dependencies
+## Установить необходимые зависимости
 RUN apt-get update && apt-get install -y \
     apt-utils \
     libpq-dev \
     libpng-dev \
     libzip-dev \
-    zip unzip \
+    zip \
+    unzip \
     git && \
     docker-php-ext-install pdo_mysql && \
-    docker-php-ext-install bcmath && \
+#    docker-php-ext-install bcmath && \
     docker-php-ext-install gd && \
     docker-php-ext-install zip && \
     apt-get clean && \
@@ -20,26 +21,18 @@ RUN apt-get update && apt-get install -y \
 
 COPY ./_docker/app/php.ini usr/local/etc/php/conf.d/php.ini
 
-# Install composer
-ENV COMPOSER_ALLOW_SUPERUSER=1
-RUN curl -sS https://getcomposer.org/installer | php --\
-    --filename=composer \
-    --install-dir=/usr/local/bin
+# Создать группу и пользователя www с uid 1000 и gid 1000
+RUN groupadd -g 1000 www \
+    && useradd -u 1000 -ms /bin/bash -g www www
 
-# Создаем пользователя и группу для работы с приложением
-RUN groupadd -g 1000 www
-RUN useradd -u 1000 -ms /bin/bash -g www www
-# Копируем файлы проекта в рабочую директорию
-COPY . /var/www
+# Копировать файлы и назначить права пользователя www
 COPY --chown=www:www . /var/www
 
-# add root to www group
-RUN chmod -R ug+w /var/www/storage
-
-# Меняем пользователя на www
+# Переключиться на пользователя www
 USER www
 
-# Открываем порт для php-fpm
+# Открыть порт для php-fpm
 EXPOSE 9000
-# Запускаем php-fpm сервер
+
+# Запустить php-fpm
 CMD ["php-fpm"]
